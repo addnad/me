@@ -1,0 +1,16 @@
+{
+  "name": "@sideline/wallet",
+  "version": "0.1.0",
+  "description": "Sideline client SDK — tab funding, voucher minting, and redemption on top of Tether WDK",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "e2e": "node scripts/e2e.js"
+  },
+  "dependencies": {
+    "@sideline/contracts": "*",
+    "@sideline/voucher": "*",
+    "@tetherto/wdk-wallet-evm": "^1.0.0-beta.15",
+    "ethers": "^6.13.0"
+  }
+}

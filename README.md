@@ -56,7 +56,8 @@ trust boundary:
 |---|---|
 | [`packages/contracts`](packages/contracts) | `SidelineEscrow` (tabs, redemption, reclaim) + `MockUSDT` test token — Hardhat |
 | [`packages/voucher`](packages/voucher) | Mint / verify / serialize vouchers (EIP-712, offline-capable, QR-sized wire format) |
-| [`app`](app) | Pear desktop app: wallet, tab loading, offline pay/receive over Hyperswarm *(in progress)* |
+| [`packages/wallet`](packages/wallet) | Client SDK on **Tether WDK**: self-custodial wallet, tab funding, minting, settlement |
+| [`app`](app) | The matchday terminal: load tab, pay by QR voucher, receive & verify offline, settle |
 
 ## Quickstart
 
@@ -68,11 +69,34 @@ npm test          # contract + voucher test suite (10 specs)
 Requires Node.js ≥ 22. Contract tests run on the in-process Hardhat network — no
 keys, RPC, or funds needed.
 
+### Run the full loop locally
+
+```bash
+# terminal 1 — a local chain
+cd packages/contracts && npx hardhat node
+
+# terminal 2 — the whole flow through WDK wallets:
+# deposit → offline mint → offline verify → redeem → double-spend rejection
+cd packages/wallet && node scripts/e2e.js
+```
+
+### Run the app
+
+```bash
+cd app
+npm run dev       # builds the bundle and serves http://localhost:8080
+```
+
+Point Settings at your RPC + deployed contracts (`packages/contracts`:
+`npm run deploy:sepolia`, or use the local-chain addresses printed by the
+e2e script). A fresh self-custodial wallet (Tether WDK) is created on
+first launch; minting and receiving vouchers work with no connection.
+
 ## Roadmap (knockout rounds)
 
 - [x] **Phase 0** — escrow contract, voucher library, full test coverage
-- [ ] **Phase 1** — WDK wallet integration: deposit → mint → redeem end-to-end on testnet
-- [ ] **Phase 2** — Pear app: offline voucher handoff over Hyperswarm (LAN, no WAN) → *Round-of-16 demo, July 8*
+- [x] **Phase 1** — WDK wallet SDK + matchday terminal app: deposit → offline mint/verify (QR) → settle
+- [ ] **Phase 2** — testnet deployment + offline voucher handoff over Hyperswarm (LAN, no WAN) → *Round-of-16 demo, July 8*
 - [ ] **Phase 3** — seen-voucher gossip + double-spend flagging, gasless redemption, fan/vendor UX → *July 12*
 - [ ] **Phase 4** — polish, pitch, live two-device demo → *Final, July 15*
 

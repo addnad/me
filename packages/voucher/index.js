@@ -30,20 +30,39 @@ function domain(chainId, escrow) {
 }
 
 /**
- * Sign a fresh voucher against the payer's tab.
- * @param {ethers.Signer} signer  payer's wallet (must own the tab)
+ * Sign a fresh voucher against the payer's tab, using any signing backend.
+ * @param {{address: string, signTypedData: function}} payer
+ *   `signTypedData({domain, types, message})` — the WDK account shape.
  * @param {{chainId: number|bigint, escrow: string, amount: bigint, expiry: number|bigint}} opts
  * @returns {Promise<{voucher: object, sig: string}>}
  */
-async function mintVoucher(signer, { chainId, escrow, amount, expiry }) {
+async function mintVoucherWith(payer, { chainId, escrow, amount, expiry }) {
   const voucher = {
-    payer: await signer.getAddress(),
+    payer: payer.address,
     id: ethers.hexlify(ethers.randomBytes(32)),
     amount: BigInt(amount),
     expiry: BigInt(expiry),
   };
-  const sig = await signer.signTypedData(domain(chainId, escrow), VOUCHER_TYPES, voucher);
+  const sig = await payer.signTypedData({
+    domain: domain(chainId, escrow),
+    types: VOUCHER_TYPES,
+    message: voucher,
+  });
   return { voucher, sig };
+}
+
+/**
+ * Convenience wrapper for ethers.Signer backends (tests, scripts).
+ * @param {ethers.Signer} signer  payer's wallet (must own the tab)
+ */
+async function mintVoucher(signer, opts) {
+  return mintVoucherWith(
+    {
+      address: await signer.getAddress(),
+      signTypedData: ({ domain, types, message }) => signer.signTypedData(domain, types, message),
+    },
+    opts
+  );
 }
 
 /**
@@ -70,7 +89,8 @@ function verifyVoucher({ voucher, sig }, { chainId, escrow, now = Math.floor(Dat
 
 /**
  * Compact wire format (base64url JSON) — small enough for a QR code,
- * trivial to ship over a P2P stream.
+ * trivial to ship over a P2P stream. Uses ethers' codecs so the same
+ * code runs in Node, Bare, and browsers (no Buffer dependency).
  */
 function encodeVoucher({ voucher, sig }) {
   const payload = JSON.stringify({
@@ -80,11 +100,14 @@ function encodeVoucher({ voucher, sig }) {
     e: voucher.expiry.toString(),
     s: sig,
   });
-  return Buffer.from(payload, "utf8").toString("base64url");
+  const b64 = ethers.encodeBase64(ethers.toUtf8Bytes(payload));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function decodeVoucher(encoded) {
-  const { p, i, a, e, s } = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8"));
+  let b64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  b64 += "=".repeat((4 - (b64.length % 4)) % 4);
+  const { p, i, a, e, s } = JSON.parse(ethers.toUtf8String(ethers.decodeBase64(b64)));
   return {
     voucher: { payer: p, id: i, amount: BigInt(a), expiry: BigInt(e) },
     sig: s,
@@ -95,6 +118,7 @@ module.exports = {
   VOUCHER_TYPES,
   domain,
   mintVoucher,
+  mintVoucherWith,
   verifyVoucher,
   encodeVoucher,
   decodeVoucher,

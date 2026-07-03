@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sideline — offline USDT payments</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="brand">
+        <img src="./assets/logo.svg" alt="" />
+        <div>
+          <div class="name">SIDELINE</div>
+          <div class="tag">offline USDT payments</div>
+        </div>
+      </div>
+
+      <button class="nav-btn active" data-view="home">Match Day</button>
+      <button class="nav-btn" data-view="load">Load Tab</button>
+      <button class="nav-btn" data-view="pay">Pay</button>
+      <button class="nav-btn" data-view="receive">Receive</button>
+      <button class="nav-btn" data-view="settle">Settle</button>
+      <button class="nav-btn" data-view="settings">Settings</button>
+
+      <div class="spacer"></div>
+
+      <div class="wallet-chip">
+        <div class="addr" id="chip-addr">no wallet yet</div>
+        <div class="net"><span class="dot off" id="chip-dot"></span><span id="chip-net">offline</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- MATCH DAY (home) -->
+      <section class="view active" id="view-home">
+        <div class="page-title">Match Day</div>
+        <div class="card">
+          <h2>Tab</h2>
+          <div class="score" id="home-available">—<span class="unit">USDT</span></div>
+          <div class="stat-row">
+            <div class="stat"><div class="label">Wallet balance</div><div class="value" id="home-balance">—</div></div>
+            <div class="stat"><div class="label">Tab deposited</div><div class="value" id="home-deposited">—</div></div>
+            <div class="stat"><div class="label">Pocket (unsettled)</div><div class="value" id="home-pocket">—</div></div>
+          </div>
+          <p class="hint" id="home-hint" style="margin-top:14px"></p>
+        </div>
+        <div class="card">
+          <h2>Activity</h2>
+          <div class="rows" id="home-activity"><div class="empty">Nothing yet. Load your tab before kickoff.</div></div>
+        </div>
+      </section>
+
+      <!-- LOAD TAB -->
+      <section class="view" id="view-load">
+        <div class="page-title">Load Tab — online step</div>
+        <div class="card">
+          <h2>Deposit USDT into your match-day tab</h2>
+          <p class="hint">Do this while you still have signal. Everything you load can be spent offline; whatever you don't spend comes back to you after the tab expires.</p>
+          <label>Amount (USDT)</label>
+          <input id="load-amount" type="number" min="1" step="1" placeholder="20" />
+          <label>Tab open for</label>
+          <select id="load-days">
+            <option value="1">1 day — single match</option>
+            <option value="7" selected>7 days — group stage</option>
+            <option value="30">30 days — the whole tournament</option>
+          </select>
+          <button class="btn primary" id="load-submit">Load tab</button>
+        </div>
+      </section>
+
+      <!-- PAY -->
+      <section class="view" id="view-pay">
+        <div class="page-title">Pay — works with zero signal</div>
+        <div class="card">
+          <h2>Mint a voucher</h2>
+          <p class="hint">A voucher is signed cash from your tab. Show the QR or send the code over the local link — the seller can check it without any network.</p>
+          <label>Denomination (USDT)</label>
+          <div class="denoms" id="pay-denoms">
+            <button class="denom" data-v="1">1</button>
+            <button class="denom selected" data-v="5">5</button>
+            <button class="denom" data-v="10">10</button>
+            <button class="denom" data-v="20">20</button>
+          </div>
+          <button class="btn primary" id="pay-mint">Mint voucher</button>
+          <div class="ticket" id="pay-ticket" style="display:none">
+            <canvas id="pay-qr" width="132" height="132"></canvas>
+            <div class="meta">
+              <div class="amount" id="pay-ticket-amount"></div>
+              <div class="hint">hand this to the seller — QR or code</div>
+              <div class="wire" id="pay-ticket-wire"></div>
+              <button class="btn ghost" id="pay-copy">Copy code</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RECEIVE -->
+      <section class="view" id="view-receive">
+        <div class="page-title">Receive — works with zero signal</div>
+        <div class="card">
+          <h2>Check an incoming voucher</h2>
+          <p class="hint">Paste the buyer's voucher code. The signature check runs entirely on this device.</p>
+          <label>Voucher code</label>
+          <textarea id="recv-wire" placeholder="paste voucher…"></textarea>
+          <button class="btn primary" id="recv-check">Verify &amp; accept</button>
+        </div>
+        <div class="card">
+          <h2>Pocket — accepted, not yet settled</h2>
+          <div class="rows" id="recv-pocket"><div class="empty">No vouchers in your pocket.</div></div>
+        </div>
+      </section>
+
+      <!-- SETTLE -->
+      <section class="view" id="view-settle">
+        <div class="page-title">Settle — online step</div>
+        <div class="card">
+          <h2>Redeem your pocket on-chain</h2>
+          <p class="hint">Back in signal? Redeem every accepted voucher in one transaction. First redemption of each voucher wins — settle promptly.</p>
+          <div class="stat-row">
+            <div class="stat"><div class="label">Vouchers</div><div class="value" id="settle-count">0</div></div>
+            <div class="stat"><div class="label">Total</div><div class="value" id="settle-total">0 USDT</div></div>
+          </div>
+          <button class="btn primary" id="settle-submit">Settle all</button>
+          <div class="rows" id="settle-log"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" id="view-settings">
+        <div class="page-title">Settings</div>
+        <div class="card">
+          <h2>Wallet</h2>
+          <p class="hint">Your seed phrase lives only on this device (Tether WDK, self-custodial).</p>
+          <div class="rows">
+            <div class="row"><span>Address</span><span class="mono" id="set-addr">—</span></div>
+          </div>
+          <button class="btn ghost" id="set-reveal">Reveal seed phrase</button>
+          <textarea id="set-seed" style="display:none" readonly></textarea>
+        </div>
+        <div class="card">
+          <h2>Network</h2>
+          <label>RPC endpoint</label>
+          <input id="set-rpc" placeholder="https://ethereum-sepolia-rpc.publicnode.com" />
+          <label>Escrow contract</label>
+          <input id="set-escrow" placeholder="0x…" />
+          <label>USDT token</label>
+          <input id="set-usdt" placeholder="0x…" />
+          <button class="btn primary" id="set-save">Save &amp; connect</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="./dist/main.js"></script>
+</body>
+</html>

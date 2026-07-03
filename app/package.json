@@ -1,0 +1,32 @@
+{
+  "name": "@sideline/app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sideline — matchday terminal (Pear desktop app)",
+  "main": "index.html",
+  "license": "MIT",
+  "pear": {
+    "name": "sideline",
+    "type": "desktop",
+    "gui": {
+      "width": 1080,
+      "height": 720,
+      "backgroundColor": "#0d120f"
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --platform=browser --outfile=dist/main.js --define:global=window",
+    "dev": "npm run build && node serve.js"
+  },
+  "dependencies": {
+    "@sideline/voucher": "*",
+    "@sideline/wallet": "*",
+    "@tetherto/wdk-wallet-evm": "^1.0.0-beta.15",
+    "ethers": "^6.13.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "sodium-javascript": "^0.8.0"
+  }
+}
