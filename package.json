@@ -1,0 +1,16 @@
+{
+  "name": "sideline",
+  "version": "0.1.0",
+  "description": "Offline-first USDT payments for the stands — prefunded bearer vouchers over P2P",
+  "scripts": {
+    "test": "npm test -w @sideline/contracts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "app"
+  ]
+}

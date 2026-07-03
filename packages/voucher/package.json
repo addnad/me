@@ -1,0 +1,10 @@
+{
+  "name": "@sideline/voucher",
+  "version": "0.1.0",
+  "description": "Mint, verify, and serialize Sideline bearer vouchers (EIP-712)",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.13.0"
+  }
+}
