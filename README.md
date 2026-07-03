@@ -57,6 +57,7 @@ trust boundary:
 | [`packages/contracts`](packages/contracts) | `SidelineEscrow` (tabs, redemption, reclaim) + `MockUSDT` test token — Hardhat |
 | [`packages/voucher`](packages/voucher) | Mint / verify / serialize vouchers (EIP-712, offline-capable, QR-sized wire format) |
 | [`packages/wallet`](packages/wallet) | Client SDK on **Tether WDK**: self-custodial wallet, tab funding, minting, settlement |
+| [`packages/link`](packages/link) | P2P layer on **Hyperswarm**: voucher handoff at a "stand" + double-spend gossip, WAN-less |
 | [`app`](app) | The matchday terminal: load tab, pay by QR voucher, receive & verify offline, settle |
 
 ## Quickstart
@@ -80,6 +81,17 @@ cd packages/contracts && npx hardhat node
 cd packages/wallet && node scripts/e2e.js
 ```
 
+### Run the offline handoff (no WAN anywhere)
+
+```bash
+cd packages/link && npm run demo
+```
+
+Spins a venue bootstrap node, two named stalls, and a fan on one swarm;
+the fan pays the pie stand with a real signed voucher, then tries the
+same voucher at the scarf stall — which flags the double-spend from
+gossip alone, before any chain is involved.
+
 ### Run the app
 
 ```bash
@@ -96,8 +108,9 @@ first launch; minting and receiving vouchers work with no connection.
 
 - [x] **Phase 0** — escrow contract, voucher library, full test coverage
 - [x] **Phase 1** — WDK wallet SDK + matchday terminal app: deposit → offline mint/verify (QR) → settle
-- [ ] **Phase 2** — testnet deployment + offline voucher handoff over Hyperswarm (LAN, no WAN) → *Round-of-16 demo, July 8*
-- [ ] **Phase 3** — seen-voucher gossip + double-spend flagging, gasless redemption, fan/vendor UX → *July 12*
+- [x] **Phase 2a** — Hyperswarm voucher handoff (WAN-less venue mode) + seen-voucher double-spend gossip
+- [ ] **Phase 2b** — testnet deployment, P2P handoff wired into the app → *Round-of-16 demo, July 8*
+- [ ] **Phase 3** — gasless redemption, fan/vendor UX polish, stand directory → *July 12*
 - [ ] **Phase 4** — polish, pitch, live two-device demo → *Final, July 15*
 
 ## Stack & disclosure

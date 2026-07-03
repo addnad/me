@@ -1,0 +1,16 @@
+{
+  "name": "@sideline/link",
+  "version": "0.1.0",
+  "description": "Sideline P2P layer — voucher handoff and double-spend gossip over Hyperswarm",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "demo": "node scripts/demo.js"
+  },
+  "dependencies": {
+    "@sideline/voucher": "*",
+    "b4a": "^1.6.6",
+    "hyperdht": "^6.15.0",
+    "hyperswarm": "^4.8.0"
+  }
+}
