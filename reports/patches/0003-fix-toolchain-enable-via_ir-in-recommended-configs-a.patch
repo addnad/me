@@ -1,0 +1,96 @@
+From 28e6bf81322f5b42530bde39a63e80ed5959c356 Mon Sep 17 00:00:00 2001
+From: addnad <postaddnad@gmail.com>
+Date: Sat, 4 Jul 2026 09:41:44 +0000
+Subject: [PATCH 3/5] fix(toolchain): enable via_ir in recommended configs,
+ align solc version
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The HTTP and LLM consumer contracts hit 'stack too deep' without
+via_ir (verified with solc 0.8.24), and ritual-meta-verification's own
+checklist requires via_ir = true — but the deploy/testing foundry.toml
+examples and the hardhat starter template didn't set it.
+
+- hardhat-starter: viaIR + optimizer settings
+- deploy skill foundry.toml: via_ir = true, solc 0.8.20 -> 0.8.24
+  (several snippets, both examples, and the hardhat template use
+  pragma ^0.8.24, which 0.8.20 cannot build)
+- testing skill foundry.toml: via_ir = true
+- http/llm skills: compiler note pointing at the configs
+---
+ skills/ritual-dapp-deploy/SKILL.md            |  5 ++++-
+ skills/ritual-dapp-http/SKILL.md              |  2 ++
+ skills/ritual-dapp-testing/SKILL.md           |  3 +++
+ templates/hardhat-starter/hardhat.config.tmpl | 10 +++++++++-
+ 4 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/skills/ritual-dapp-deploy/SKILL.md b/skills/ritual-dapp-deploy/SKILL.md
+index df4a4b8..2883abb 100644
+--- a/skills/ritual-dapp-deploy/SKILL.md
++++ b/skills/ritual-dapp-deploy/SKILL.md
+@@ -198,9 +198,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
+ src = "src"
+ out = "out"
+ libs = ["lib"]
+-solc = "0.8.20"
++solc = "0.8.24"
+ optimizer = true
+ optimizer_runs = 200
++# Required: consumer contracts encoding large precompile request structs
++# hit "stack too deep" without via_ir.
++via_ir = true
+ 
+ [rpc_endpoints]
+ ritual = "${RITUAL_RPC_URL}"
+diff --git a/skills/ritual-dapp-http/SKILL.md b/skills/ritual-dapp-http/SKILL.md
+index 7b66609..4264194 100644
+--- a/skills/ritual-dapp-http/SKILL.md
++++ b/skills/ritual-dapp-http/SKILL.md
+@@ -507,6 +507,8 @@ contract HTTPConsumer {
+ }
+ ```
+ 
++> Compiler note: this contract hits "stack too deep" under default settings. Enable `via_ir = true` in foundry.toml (or `viaIR: true` + optimizer in hardhat) — the starter configs in `ritual-dapp-deploy`, `ritual-dapp-testing`, and `templates/hardhat-starter` already include it.
++
+ ---
+ 
+ ## 6. Secrets and Response Encryption (Separate Concepts)
+diff --git a/skills/ritual-dapp-testing/SKILL.md b/skills/ritual-dapp-testing/SKILL.md
+index 49110a0..722bb06 100644
+--- a/skills/ritual-dapp-testing/SKILL.md
++++ b/skills/ritual-dapp-testing/SKILL.md
+@@ -508,6 +508,9 @@ src = "src"
+ out = "out"
+ libs = ["lib"]
+ solc_version = "0.8.24"
++# Required: consumer contracts encoding large precompile request structs
++# hit "stack too deep" without via_ir.
++via_ir = true
+ 
+ [profile.fork]
+ fork_url = "${RITUAL_RPC_URL}"
+diff --git a/templates/hardhat-starter/hardhat.config.tmpl b/templates/hardhat-starter/hardhat.config.tmpl
+index 6e8dde3..c016dcf 100644
+--- a/templates/hardhat-starter/hardhat.config.tmpl
++++ b/templates/hardhat-starter/hardhat.config.tmpl
+@@ -4,7 +4,15 @@ import * as dotenv from "dotenv";
+ dotenv.config();
+ 
+ const config: HardhatUserConfig = {
+-  solidity: "0.8.24",
++  solidity: {
++    version: "0.8.24",
++    // viaIR + optimizer are required: Ritual precompile request structs are
++    // large enough that consumer contracts hit "stack too deep" without them.
++    settings: {
++      viaIR: true,
++      optimizer: { enabled: true, runs: 200 },
++    },
++  },
+   networks: {
+     ritual: {
+       url: process.env.RITUAL_RPC_URL || "https://rpc.ritualfoundation.org",
+-- 
+2.43.0
+

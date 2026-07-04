@@ -1,6 +1,6 @@
 # Issue 2
 
-**Title:** `ritual-dapp-multimodal` `MediaConsumer` snippet references undefined `StorageRef` struct (won't compile)
+**Title:** bug(skills/ritual-dapp-multimodal): MediaConsumer snippet references undefined StorageRef struct (won't compile)
 
 **Body:**
 

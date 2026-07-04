@@ -1,6 +1,6 @@
 # Issue 1
 
-**Title:** `ritual-dapp-llm` consumer snippet is invalid Solidity — `abi.decode` with nested tuple literal cannot compile
+**Title:** bug(skills/ritual-dapp-llm): consumer snippet is invalid Solidity — abi.decode with nested tuple literal cannot compile
 
 **Body:**
 

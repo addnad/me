@@ -1,6 +1,6 @@
 # Issue 4
 
-**Title:** `pull_contracts.py`: selector extraction misreads PUSH immediate data as PUSH4 — produces false selectors
+**Title:** bug(scripts/pull_contracts.py): selector extraction misreads PUSH immediate data as PUSH4, produces false selectors
 
 **Body:**
 

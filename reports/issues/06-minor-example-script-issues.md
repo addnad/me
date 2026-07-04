@@ -1,6 +1,6 @@
 # Issue 6
 
-**Title:** Minor: dead fee vars in example run.sh, silent `--rpc` failover, inconsistent secrets JSON, RIT/RITUAL symbol naming
+**Title:** bug(examples): dead fee vars in run.sh, silent --rpc failover, inconsistent secrets JSON, RIT/RITUAL naming
 
 **Body:**
 
@@ -8,7 +8,7 @@ Batch of small issues found while test-running commit `57045a3` (1.0.0). Filed t
 
 ## 1. `MAX_FEE_GWEI` / `PRIORITY_FEE_GWEI` are dead variables
 
-Both `examples/persistent-agent/run.sh` (lines 82–83) and `examples/sovereign-agent/run.sh` (lines 68–69) define them as user-configurable, but no `cast send` in either script ever uses them — setting them does nothing. Either wire them into the sends (`--gas-price` / `--priority-gas-price`) or remove them.
+Both `examples/persistent-agent/run.sh` (lines 82–83) and `examples/sovereign-agent/run.sh` (lines 68–69) define them as user-configurable, but no `cast send` in either script ever uses them — setting them does nothing. Wiring them into the sends (`--gas-price` / `--priority-gas-price`) would also address item 4 of #9 (missing gas price limits); removing them is the alternative if that's not wanted.
 
 ## 2. `pull_contracts.py --rpc` silently fails over to the public endpoint
 

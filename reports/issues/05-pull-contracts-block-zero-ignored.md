@@ -1,6 +1,6 @@
 # Issue 5
 
-**Title:** `pull_contracts.py --block 0` is silently ignored and pulls the whole registry instead
+**Title:** bug(scripts/pull_contracts.py): --block 0 silently ignored, falls through to registry mode
 
 **Body:**
 

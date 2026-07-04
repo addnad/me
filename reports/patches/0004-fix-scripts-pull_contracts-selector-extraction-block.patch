@@ -1,0 +1,68 @@
+From b9ac1930939ee41cdf40328273ca7ccdaa7378a2 Mon Sep 17 00:00:00 2001
+From: addnad <postaddnad@gmail.com>
+Date: Sat, 4 Jul 2026 09:41:44 +0000
+Subject: [PATCH 4/5] fix(scripts): pull_contracts selector extraction, --block
+ 0, --rpc failover
+
+- extract_selectors: skip immediate data for all PUSH opcodes
+  (0x60-0x7f). Previously any 0x63 byte inside PUSH1..PUSH32
+  immediates was misread as PUSH4, producing false selectors that got
+  sent to 4byte.directory and written to selectors.json
+- dispatch block-discovery mode with 'is not None' so --block 0
+  (genesis) is not silently treated as registry mode
+- respect an explicit --rpc endpoint instead of silently failing over
+  to the public RPC
+---
+ scripts/pull_contracts.py | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/scripts/pull_contracts.py b/scripts/pull_contracts.py
+index adc5c81..9586efe 100644
+--- a/scripts/pull_contracts.py
++++ b/scripts/pull_contracts.py
+@@ -114,12 +114,14 @@ def extract_selectors(bytecode: str) -> list[str]:
+     raw = bytes.fromhex(bytecode)
+     selectors = set()
+     i = 0
+-    while i < len(raw) - 4:
+-        if raw[i] == 0x63:  # PUSH4
++    while i < len(raw):
++        op = raw[i]
++        if op == 0x63 and i + 4 < len(raw):  # PUSH4
+             sel = raw[i + 1 : i + 5].hex()
+             if sel not in ("00000000", "ffffffff"):
+                 selectors.add(sel)
+-            i += 5
++        if 0x60 <= op <= 0x7F:  # PUSH1..PUSH32: skip immediate data
++            i += (op - 0x5F) + 1
+         else:
+             i += 1
+     return sorted(selectors)
+@@ -415,16 +417,20 @@ Examples:
+ 
+     # Build RPC client
+     reg = load_registry()
+-    endpoints = [args.rpc] if args.rpc else reg.get("rpc_endpoints", [DEFAULT_RPC])
+-    if DEFAULT_RPC not in endpoints:
+-        endpoints.append(DEFAULT_RPC)
++    if args.rpc:
++        # Respect an explicit --rpc: no silent failover to the public endpoint.
++        endpoints = [args.rpc]
++    else:
++        endpoints = reg.get("rpc_endpoints", [DEFAULT_RPC])
++        if DEFAULT_RPC not in endpoints:
++            endpoints.append(DEFAULT_RPC)
+     rpc = RPC(endpoints)
+ 
+     args.output_dir.mkdir(parents=True, exist_ok=True)
+ 
+     results = []
+ 
+-    if args.block:
++    if args.block is not None:
+         # Discover mode
+         print(f"Discovering contracts at block {args.block}...")
+         found = discover_contracts_at_block(rpc, args.block)
+-- 
+2.43.0
+

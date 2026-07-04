@@ -1,6 +1,6 @@
 # Issue 3
 
-**Title:** Recommended compiler configs can't build the skills' own consumer contracts (`via_ir` missing; solc 0.8.20 vs `^0.8.24` pragma mismatch)
+**Title:** bug(toolchain): recommended foundry/hardhat configs can't build the skills' own contracts — via_ir missing, solc 0.8.20 vs ^0.8.24 mismatch
 
 **Body:**
 

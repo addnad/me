@@ -1,0 +1,73 @@
+From 56003bafbe10333cd375b92fb3427648cc9cbb4b Mon Sep 17 00:00:00 2001
+From: addnad <postaddnad@gmail.com>
+Date: Sat, 4 Jul 2026 09:41:44 +0000
+Subject: [PATCH 2/5] fix(skills): define missing types in multimodal and
+ scheduler snippets
+
+- MediaConsumer (ritual-dapp-multimodal) used StorageRef in function
+  signatures without defining the struct
+- ScheduledHTTPConsumer (ritual-dapp-scheduler) carries its own
+  SPDX/pragma header but referenced IScheduler and IRitualWallet from
+  a previous code block; inline both interfaces so the snippet is
+  self-contained as presented
+
+Both snippets now compile with solc 0.8.24 (via_ir).
+---
+ skills/ritual-dapp-multimodal/SKILL.md |  7 +++++++
+ skills/ritual-dapp-scheduler/SKILL.md  | 22 ++++++++++++++++++++++
+ 2 files changed, 29 insertions(+)
+
+diff --git a/skills/ritual-dapp-multimodal/SKILL.md b/skills/ritual-dapp-multimodal/SKILL.md
+index 88e2f7e..d3bdb70 100644
+--- a/skills/ritual-dapp-multimodal/SKILL.md
++++ b/skills/ritual-dapp-multimodal/SKILL.md
+@@ -629,6 +629,13 @@ contract MediaConsumer {
+         _;
+     }
+ 
++    /// @dev StorageRef tuple: (platform, path, keyRef). See `ritual-dapp-da`.
++    struct StorageRef {
++        string platform;
++        string path;
++        string keyRef;
++    }
++
+     /// @dev Input type for multimodal precompiles (ModalInput tuple)
+     struct ModalInput {
+         uint8 inputType;    // 0=TEXT, 1=IMAGE, 2=AUDIO, 3=VIDEO
+diff --git a/skills/ritual-dapp-scheduler/SKILL.md b/skills/ritual-dapp-scheduler/SKILL.md
+index 07a2005..980aeb6 100644
+--- a/skills/ritual-dapp-scheduler/SKILL.md
++++ b/skills/ritual-dapp-scheduler/SKILL.md
+@@ -370,6 +370,28 @@ When a scheduled call triggers an async precompile (HTTP 0x0801, LLM 0x0802, etc
+ // SPDX-License-Identifier: MIT
+ pragma solidity ^0.8.20;
+ 
++interface IRitualWallet {
++    function deposit(uint256 lockDuration) external payable;
++}
++
++interface IScheduler {
++    function schedule(
++        bytes calldata data,
++        uint32 gas,
++        uint32 startBlock,
++        uint32 numCalls,
++        uint32 frequency,
++        uint32 ttl,
++        uint256 maxFeePerGas,
++        uint256 maxPriorityFeePerGas,
++        uint256 value,
++        address payer
++    ) external returns (uint256 callId);
++
++    function cancel(uint256 callId) external;
++    function approveScheduler(address schedulerContract) external;
++}
++
+ contract ScheduledHTTPConsumer {
+     address constant HTTP_PRECOMPILE = 0x0000000000000000000000000000000000000801;
+     address constant RITUAL_WALLET = 0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948;
+-- 
+2.43.0
+

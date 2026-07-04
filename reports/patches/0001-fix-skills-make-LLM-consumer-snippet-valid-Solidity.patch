@@ -1,0 +1,56 @@
+From b026819c3a9594caf0f3cf9c5def81ad46b4e3e8 Mon Sep 17 00:00:00 2001
+From: addnad <postaddnad@gmail.com>
+Date: Sat, 4 Jul 2026 09:41:44 +0000
+Subject: [PATCH 1/5] fix(skills): make LLM consumer snippet valid Solidity
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+abi.decode cannot take a nested tuple literal as a type name — solc
+rejects the canonical LLMConsumer snippet with 'Argument has to be a
+type name'. Decode the trailing (string,string,string) storage
+reference via a StorageRef struct instead. Verified with solc 0.8.24
+(via_ir).
+---
+ skills/ritual-dapp-llm/SKILL.md | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/skills/ritual-dapp-llm/SKILL.md b/skills/ritual-dapp-llm/SKILL.md
+index ef42843..73c11fd 100644
+--- a/skills/ritual-dapp-llm/SKILL.md
++++ b/skills/ritual-dapp-llm/SKILL.md
+@@ -930,6 +930,13 @@ contract LLMConsumer {
+     address constant LLM_PRECOMPILE = 0x0000000000000000000000000000000000000802;
+     address constant RITUAL_WALLET  = 0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948;
+ 
++    /// @dev StorageRef tuple: (platform, path, keyRef). See `ritual-dapp-da`.
++    struct StorageRef {
++        string platform;
++        string path;
++        string keyRef;
++    }
++
+     event InferenceCompleted(string model, bool hasError);
+ 
+     function depositForFees() external payable {
+@@ -990,7 +997,7 @@ contract LLMConsumer {
+         bytes memory modelMeta;
+         string memory errorMsg;
+         (hasError, completionData, modelMeta, errorMsg, ) =
+-            abi.decode(actualOutput, (bool, bytes, bytes, string, (string, string, string)));
++            abi.decode(actualOutput, (bool, bytes, bytes, string, StorageRef));
+ 
+         emit InferenceCompleted(model, hasError);
+     }
+@@ -999,6 +1006,8 @@ contract LLMConsumer {
+ 
+ > `completionData` is ABI-encoded — decode it off-chain with the TypeScript helpers, or write a Solidity helper for on-chain parsing.
+ 
++> Compiler note: this contract hits "stack too deep" under default settings. Enable `via_ir = true` in foundry.toml (or `viaIR: true` + optimizer in hardhat) — the starter configs in `ritual-dapp-deploy`, `ritual-dapp-testing`, and `templates/hardhat-starter` already include it.
++
+ ---
+ 
+ ## 8. PII Mode (Optional)
+-- 
+2.43.0
+
