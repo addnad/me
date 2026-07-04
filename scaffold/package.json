@@ -1,0 +1,22 @@
+{
+  "name": "hex-payload-genesis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HEX_PAYLOAD Genesis — fully on-chain generative art on Ritual Chain",
+  "scripts": {
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "deploy:ritual": "hardhat run scripts/deploy.js --network ritual",
+    "configure:ritual": "hardhat run scripts/configure.js --network ritual",
+    "status:ritual": "hardhat run scripts/status.js --network ritual",
+    "mint:ritual": "hardhat run scripts/mint.js --network ritual"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "chai": "^4.4.1",
+    "eciesjs": "^0.5.0",
+    "ethers": "^6.13.0",
+    "hardhat": "^2.22.0"
+  }
+}

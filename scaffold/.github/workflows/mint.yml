@@ -1,0 +1,39 @@
+name: mint
+
+# Mints a piece with the given prompt and waits for the Phase 2 reveal.
+# Requires a prior successful deploy run (deployments/ritual.json committed).
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Art prompt"
+        type: string
+        required: true
+      reveal_timeout:
+        description: "Seconds to wait for the reveal callback"
+        type: string
+        default: "300"
+
+jobs:
+  mint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+
+      - name: Mint and wait for reveal
+        run: npx hardhat run scripts/mint.js --network ritual
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PROMPT: ${{ inputs.prompt }}
+          REVEAL_TIMEOUT: ${{ inputs.reveal_timeout }}
+
+      - name: Status
+        if: always()
+        run: npx hardhat run scripts/status.js --network ritual
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
