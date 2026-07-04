@@ -51,21 +51,19 @@ jobs:
           git config --global user.email "postaddnad@gmail.com"
           git clone "https://x-access-token:${GH_TOKEN}@github.com/${TARGET}.git" target
           cd target
-          if [ -n "$(git log --oneline 2>/dev/null | head -1)" ]; then
-            echo "Target repo already has commits — refusing to overwrite."
-            exit 1
-          fi
+          git checkout main 2>/dev/null || git checkout -b main
+          # Sync scaffold state into the target, preserving deployments/
+          # (written there by the target's own deploy workflow).
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name deployments -exec rm -rf {} +
           cp -r ../scaffold/. .
-          git checkout -b main 2>/dev/null || git checkout main
           git add -A
-          git commit -m "HEX_PAYLOAD Genesis: on-chain generative art on Ritual Chain
-
-          PromptGenesis ERC-721: mint(prompt) fires the image precompile (0x0818),
-          jobId = mint tx hash (via 0x0830), AsyncDelivery callback reveals the
-          token. 14 passing lifecycle tests against mocked precompiles; GitHub
-          Actions workflows for phone-only deploy/mint ops; Next.js frontend."
-          git push -u origin main
-          echo "Bootstrapped ${TARGET}."
+          if git diff --cached --quiet; then
+            echo "Target already up to date."
+          else
+            git commit -m "Sync scaffold from addnad/me"
+            git push -u origin main
+            echo "Synced ${TARGET}."
+          fi
 
       - name: deploy
         if: inputs.action == 'deploy'
