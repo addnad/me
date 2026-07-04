@@ -1,0 +1,97 @@
+name: relay
+
+# Remote-control bridge for addnad/hex-payload-genesis.
+#
+# This session can only push to addnad/me, so cross-repo operations run
+# through this workflow using the CROSS_REPO_PAT secret — a fine-grained
+# PAT scoped to addnad/hex-payload-genesis with Contents (RW),
+# Workflows (RW), and Actions (RW) permissions.
+#
+# Actions:
+#   bootstrap  push the scaffold/ directory as the initial commit of
+#              addnad/hex-payload-genesis (main)
+#   deploy     dispatch the 'deploy' workflow in hex-payload-genesis
+#   mint       dispatch the 'mint' workflow with the given prompt
+#   watch      print status + logs of the latest run in hex-payload-genesis
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [bootstrap, deploy, mint, watch]
+        required: true
+      prompt:
+        description: "Art prompt (mint)"
+        type: string
+        default: ""
+      hf_repo_id:
+        description: "HuggingFace dataset id (deploy)"
+        type: string
+        default: "1stBernice/hex-payload-art"
+      deposit_rit:
+        description: "RITUAL fee deposit (deploy)"
+        type: string
+        default: "5"
+
+env:
+  GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+  TARGET: addnad/hex-payload-genesis
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bootstrap
+        if: inputs.action == 'bootstrap'
+        run: |
+          git config --global user.name "addnad"
+          git config --global user.email "postaddnad@gmail.com"
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${TARGET}.git" target
+          cd target
+          if [ -n "$(git log --oneline 2>/dev/null | head -1)" ]; then
+            echo "Target repo already has commits — refusing to overwrite."
+            exit 1
+          fi
+          cp -r ../scaffold/. .
+          git checkout -b main 2>/dev/null || git checkout main
+          git add -A
+          git commit -m "HEX_PAYLOAD Genesis: on-chain generative art on Ritual Chain
+
+          PromptGenesis ERC-721: mint(prompt) fires the image precompile (0x0818),
+          jobId = mint tx hash (via 0x0830), AsyncDelivery callback reveals the
+          token. 14 passing lifecycle tests against mocked precompiles; GitHub
+          Actions workflows for phone-only deploy/mint ops; Next.js frontend."
+          git push -u origin main
+          echo "Bootstrapped ${TARGET}."
+
+      - name: deploy
+        if: inputs.action == 'deploy'
+        run: |
+          gh workflow run deploy -R "$TARGET" \
+            -f da_provider=hf \
+            -f hf_repo_id="${{ inputs.hf_repo_id }}" \
+            -f deposit_rit="${{ inputs.deposit_rit }}"
+          echo "Dispatched deploy in ${TARGET}."
+
+      - name: mint
+        if: inputs.action == 'mint'
+        run: |
+          gh workflow run mint -R "$TARGET" \
+            -f prompt="${{ inputs.prompt }}"
+          echo "Dispatched mint in ${TARGET}."
+
+      - name: watch
+        if: inputs.action == 'watch'
+        run: |
+          echo "=== recent runs in ${TARGET} ==="
+          gh run list -R "$TARGET" --limit 5
+          RUN_ID=$(gh run list -R "$TARGET" --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -n "$RUN_ID" ]; then
+            echo "=== status of run $RUN_ID ==="
+            gh run view "$RUN_ID" -R "$TARGET" || true
+            echo "=== logs (tail) ==="
+            gh run view "$RUN_ID" -R "$TARGET" --log 2>/dev/null | tail -120 || echo "(logs not ready)"
+          fi

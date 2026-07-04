@@ -1,0 +1,68 @@
+name: deploy
+
+# Deploys PromptGenesis to Ritual Chain (1979), funds its RitualWallet fee
+# balance, configures the TEE executor + encrypted storage credentials, and
+# commits deployments/ritual.json back to the repo.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   PRIVATE_KEY   0x-prefixed funded Ritual testnet key (throwaway)
+#   HF_TOKEN      HuggingFace token with write access to HF_REPO_ID  (DA_PROVIDER=hf)
+#   PINATA_JWT    Pinata JWT                                          (DA_PROVIDER=pinata)
+
+on:
+  workflow_dispatch:
+    inputs:
+      da_provider:
+        description: "Storage provider for generated images"
+        type: choice
+        options: [hf, pinata]
+        default: hf
+      hf_repo_id:
+        description: "HuggingFace dataset id (user/repo) — required for hf"
+        type: string
+        default: ""
+      deposit_rit:
+        description: "RITUAL to deposit for Phase 2 fees"
+        type: string
+        default: "5"
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+
+      - name: Deploy PromptGenesis
+        run: npx hardhat run scripts/deploy.js --network ritual
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          DEPOSIT_RIT: ${{ inputs.deposit_rit }}
+
+      - name: Configure executor + storage
+        run: npx hardhat run scripts/configure.js --network ritual
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          DA_PROVIDER: ${{ inputs.da_provider }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ inputs.hf_repo_id }}
+          PINATA_JWT: ${{ secrets.PINATA_JWT }}
+
+      - name: Status
+        run: npx hardhat run scripts/status.js --network ritual
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Commit deployment record
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployments/ritual.json
+          git diff --cached --quiet || git commit -m "Record Ritual deployment"
+          git push
