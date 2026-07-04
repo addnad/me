@@ -14,8 +14,10 @@ export const ritualChain = defineChain({
   },
 });
 
+// Canonical Ritual deployment (see deployments/ritual.json); the env var
+// still overrides for forks/redeployments.
 export const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
-  "0x0000000000000000000000000000000000000000") as `0x${string}`;
+  "0x88d3D38E3b9Cb865bA85959032645a10368355aC") as `0x${string}`;
 
 export const promptGenesisAbi = [
   {
