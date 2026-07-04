@@ -33,6 +33,10 @@ on:
         description: "RITUAL fee deposit (deploy)"
         type: string
         default: "5"
+      run_id:
+        description: "Specific run id in the target repo to inspect (watch)"
+        type: string
+        default: ""
 
 env:
   GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
@@ -86,7 +90,10 @@ jobs:
         run: |
           echo "=== recent runs in ${TARGET} ==="
           gh run list -R "$TARGET" --limit 5
-          RUN_ID=$(gh run list -R "$TARGET" --limit 1 --json databaseId --jq '.[0].databaseId')
+          RUN_ID="${{ inputs.run_id }}"
+          if [ -z "$RUN_ID" ]; then
+            RUN_ID=$(gh run list -R "$TARGET" --limit 1 --json databaseId --jq '.[0].databaseId')
+          fi
           if [ -n "$RUN_ID" ]; then
             echo "=== status of run $RUN_ID ==="
             gh run view "$RUN_ID" -R "$TARGET" || true
