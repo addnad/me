@@ -83,7 +83,9 @@ async function main() {
   const blob = encrypt(pubKey, Buffer.from(JSON.stringify(secrets)));
   console.log(`Encrypted secrets: ${blob.length} bytes for keyRef ${storageRef.keyRef}`);
 
-  const tx = await gen.setExecutorConfig(node.teeAddress, ["0x" + blob.toString("hex")], storageRef);
+  // eciesjs returns a Uint8Array — hexlify it (Uint8Array.toString("hex")
+  // silently yields comma-separated decimals, not hex).
+  const tx = await gen.setExecutorConfig(node.teeAddress, [ethers.hexlify(blob)], storageRef);
   await tx.wait();
   console.log(`setExecutorConfig confirmed: ${tx.hash}`);
   console.log(`Storage: ${storageRef.platform} ${storageRef.path}`);
