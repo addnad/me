@@ -1,0 +1,24 @@
+{
+  "name": "keeper-press",
+  "version": "0.1.0",
+  "description": "On-chain newspaper, prediction market, and agent watchdog run by one Ritual sovereign agent",
+  "scripts": {
+    "compile": "node scripts/compile.js",
+    "test": "hardhat test --no-compile",
+    "deploy": "hardhat run --no-compile scripts/deploy.js --network ritual",
+    "postinstall": "node scripts/vendor.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.1.2",
+    "@nomicfoundation/hardhat-ethers": "^3.1.3",
+    "chai": "^4.5.0",
+    "ethers": "^6.17.0",
+    "hardhat": "^2.28.6",
+    "mocha": "^11.7.6",
+    "playwright-core": "^1.61.1",
+    "solc": "^0.8.24"
+  }
+}
