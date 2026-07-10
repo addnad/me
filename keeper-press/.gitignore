@@ -1,0 +1,14 @@
+# secrets — never commit keys or env files
+.env
+.env.*
+*.key
+.burner*
+keystore/
+
+# toolchain output
+node_modules/
+artifacts/
+cache/
+coverage/
+
+# local deployment state is committed intentionally via deployments.json only

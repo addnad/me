@@ -1,0 +1,11 @@
+{
+  "chainId": 1979,
+  "sovereign": "0xae446e37Ed74b050bAe8FC570775f7Cc20bDC3CB",
+  "ritualWallet": "0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948",
+  "lockBlocks": 100000,
+  "contracts": {
+    "AgentWatchdog": "0xAF0B21591E02cd5c057dc71131Efb30547eDDEE3",
+    "KeeperDigest": "0xaA2C3be2249f62f6e5bAbC36d710Ac17e5b746F4",
+    "HeadlineMarkets": "0x3C8B245dd8988Bf4F48A2B1CE9157A3280d1d290"
+  }
+}
